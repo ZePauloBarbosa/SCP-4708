@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCP-4708 — Travel Path Versioning Mock</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #1a1f2e;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px;
+  }
+
+  /* ── Scenario switcher ── */
+  .scenario-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    background: #0f1320;
+    border: 1px solid #2a3050;
+    border-radius: 10px;
+    padding: 6px;
+    flex-shrink: 0;
+  }
+  .scenario-btn {
+    padding: 8px 18px;
+    border-radius: 7px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    color: #8892b0;
+    background: transparent;
+    letter-spacing: .3px;
+  }
+  .scenario-btn.active {
+    background: #2563eb;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(37,99,235,.4);
+  }
+  .scenario-label {
+    font-size: 11px;
+    color: #4a5580;
+    text-align: center;
+    margin-bottom: 12px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  /* ── App shell — full screen map ── */
+  .app-shell {
+    width: 1100px;
+    max-width: 100%;
+    height: 680px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    position: relative;
+    background: #f2f2f0;
+  }
+
+  /* MAP fills entire shell */
+  .map-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .map-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── Floating top nav bar ── */
+  .float-topnav {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  /* Steps panel */
+  .steps-panel {
+    background: rgba(27, 34, 54, 0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 8px;
+    padding: 10px 14px;
+    pointer-events: all;
+  }
+  .steps-list {
+    list-style: none;
+    font-size: 11.5px;
+    color: #c8cfe8;
+    line-height: 2;
+  }
+  .steps-list li { display: flex; gap: 6px; }
+  .step-num { color: #6b7db0; min-width: 14px; }
+
+  /* Zoom controls top-right */
+  .zoom-panel {
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(8px);
+    border-radius: 8px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #333;
+    margin-left: auto;
+    pointer-events: all;
+    border: 1px solid rgba(0,0,0,.08);
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    height: fit-content;
+    align-self: flex-start;
+  }
+  .zoom-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 15px; color: #555; line-height: 1; padding: 0 3px;
+  }
+  .zoom-btn:hover { color: #000; }
+
+  /* ── Floating editor header ── */
+  .float-editor-header {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.15);
+    border: 1px solid rgba(0,0,0,.08);
+    white-space: nowrap;
+  }
+  .editor-title { font-size: 13px; font-weight: 700; color: #111; }
+  .editor-divider { width: 1px; height: 14px; background: #ddd; }
+  .editor-route { font-size: 13px; color: #555; font-weight: 500; }
+  .editor-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; color: #aaa; line-height: 1; margin-left: 4px;
+  }
+  .editor-close:hover { color: #333; }
+
+  /* ── Floating map instruction panel ── */
+  .float-instructions {
+    position: absolute;
+    top: 68px;
+    left: 12px;
+    z-index: 20;
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(8px);
+    border-radius: 8px;
+    padding: 12px 14px 12px 14px;
+    font-size: 11.5px;
+    line-height: 2;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    border: 1px solid rgba(0,0,0,.08);
+  }
+  .float-instructions .x-btn {
+    position: absolute; top: 5px; right: 8px;
+    background: none; border: none; cursor: pointer;
+    font-size: 13px; color: #aaa;
+  }
+  .float-instructions ol { padding-left: 16px; }
+  .float-instructions li { color: #444; }
+
+  /* ── Right side map controls ── */
+  .float-map-controls {
+    position: absolute;
+    top: 68px;
+    right: 12px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .map-ctrl-btn {
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; color: #555;
+    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    transition: background .15s;
+  }
+  .map-ctrl-btn:hover { background: #f0f0f0; }
+
+  /* ── Left zoom controls (bottom-left) ── */
+  .float-zoom-left {
+    position: absolute;
+    bottom: 70px;
+    left: 12px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .zoom-circle {
+    width: 30px; height: 30px;
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 15px; color: #555;
+    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    transition: background .15s;
+  }
+  .zoom-circle:hover { background: #f0f0f0; }
+
+  /* ── Legend (bottom-right) ── */
+  .float-legend {
+    position: absolute;
+    bottom: 70px;
+    right: 12px;
+    z-index: 20;
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    color: #333;
+  }
+
+  /* ── Acend label ── */
+  .float-acend {
+    position: absolute;
+    top: 68px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    background: rgba(255,255,255,.85);
+    backdrop-filter: blur(6px);
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: #333;
+    border: 1px solid rgba(0,0,0,.08);
+    pointer-events: none;
+  }
+
+  /* ── Bottom pill bar ── */
+  .float-bottom {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .bottom-pill {
+    background: rgba(255,255,255,.97);
+    backdrop-filter: blur(12px);
+    border-radius: 10px;
+    padding: 9px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.18);
+    border: 1px solid rgba(0,0,0,.08);
+    white-space: nowrap;
+  }
+  .pill-label { font-size: 13px; font-weight: 700; color: #111; }
+  .pill-route { font-size: 13px; color: #555; font-weight: 500; }
+  .pill-version { font-size: 13px; color: #555; font-weight: 500; }
+  .pill-divider { width: 1px; height: 16px; background: #e0e0e0; }
+
+  .version-history-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: 1px solid #d0d0d0;
+    border-radius: 6px; padding: 6px 12px;
+    font-size: 12px; font-weight: 600; color: #333;
+    cursor: pointer; transition: all .15s;
+  }
+  .version-history-btn:hover { background: #f0f5ff; border-color: #2563eb; color: #2563eb; }
+
+  .save-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: #1b2236; border: none;
+    border-radius: 6px; padding: 7px 14px;
+    font-size: 12px; font-weight: 600; color: #fff;
+    cursor: pointer; transition: all .15s;
+  }
+  .save-btn:hover { background: #2a3a60; }
+
+  /* ── Version History Modal ── */
+  .vh-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+  }
+  .vh-overlay.open { opacity: 1; pointer-events: all; }
+
+  .vh-modal {
+    background: #fff;
+    border-radius: 12px;
+    width: 340px;
+    max-height: 480px;
+    overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,.35);
+    transform: translateY(10px) scale(.98);
+    transition: transform .2s;
+    padding: 20px;
+  }
+  .vh-overlay.open .vh-modal { transform: translateY(0) scale(1); }
+
+  .vh-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 4px;
+  }
+  .vh-title { font-size: 16px; font-weight: 700; color: #111; }
+  .vh-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 20px; color: #aaa; line-height: 1;
+  }
+  .vh-close:hover { color: #333; }
+  .vh-subtitle { font-size: 12px; color: #999; margin-bottom: 16px; }
+
+  /* Version cards */
+  .version-card {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    transition: border-color .15s, background .15s;
+  }
+  .version-card:last-child { margin-bottom: 0; }
+  .version-card.active-card {
+    border-color: #2563eb;
+    background: #f0f5ff;
+  }
+
+  .vc-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4px;
+  }
+  .vc-name {
+    font-size: 13px; font-weight: 700; color: #111;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .vc-badges { display: flex; gap: 5px; align-items: center; }
+
+  .badge-user {
+    display: flex; align-items: center; gap: 3px;
+    background: #f0fdf4; border: 1px solid #bbf7d0;
+    color: #16a34a; border-radius: 20px;
+    padding: 2px 8px; font-size: 10px; font-weight: 700;
+  }
+  .badge-system {
+    display: flex; align-items: center; gap: 3px;
+    background: #faf5ff; border: 1px solid #e9d5ff;
+    color: #9333ea; border-radius: 20px;
+    padding: 2px 8px; font-size: 10px; font-weight: 700;
+  }
+  .badge-active {
+    background: #111; color: #fff;
+    border-radius: 20px; padding: 2px 8px;
+    font-size: 10px; font-weight: 700;
+  }
+
+  .vc-date { font-size: 11px; color: #777; margin-bottom: 1px; }
+  .vc-author { font-size: 11px; color: #999; margin-bottom: 6px; }
+  .vc-desc { font-size: 11px; color: #444; line-height: 1.4; }
+
+  .make-active-btn {
+    width: 100%; margin-top: 10px;
+    background: #fff; border: 1px solid #d8d8d8;
+    border-radius: 6px; padding: 7px;
+    font-size: 12px; font-weight: 600; color: #333;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all .15s;
+  }
+  .make-active-btn:hover { background: #f0f5ff; border-color: #2563eb; color: #2563eb; }
+
+  /* No user version notice */
+  .no-user-notice {
+    background: #fffbeb; border: 1px solid #fcd34d;
+    border-radius: 6px; padding: 10px 12px;
+    font-size: 11px; color: #92400e;
+    margin-bottom: 12px; line-height: 1.5;
+  }
+  .no-user-notice strong { display: block; margin-bottom: 2px; font-size: 11.5px; }
+
+  /* ── Save confirmation modal ── */
+  .save-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+  }
+  .save-overlay.open { opacity: 1; pointer-events: all; }
+
+  .save-modal {
+    background: #fff;
+    border-radius: 12px;
+    width: 360px;
+    padding: 24px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.35);
+    transform: translateY(10px) scale(.98);
+    transition: transform .2s;
+  }
+  .save-overlay.open .save-modal { transform: translateY(0) scale(1); }
+
+  .save-modal-title { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 8px; }
+  .save-modal-body { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 20px; }
+
+  .save-modal-actions { display: flex; gap: 10px; }
+  .btn-secondary {
+    flex: 1; padding: 9px; border: 1px solid #d0d0d0;
+    border-radius: 7px; background: #fff; font-size: 13px;
+    font-weight: 600; color: #333; cursor: pointer; transition: all .15s;
+  }
+  .btn-secondary:hover { background: #f5f5f5; }
+  .btn-primary {
+    flex: 1; padding: 9px; border: none;
+    border-radius: 7px; background: #2563eb; font-size: 13px;
+    font-weight: 600; color: #fff; cursor: pointer; transition: all .15s;
+  }
+  .btn-primary:hover { background: #1d4ed8; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #111; color: #fff; border-radius: 8px;
+    padding: 10px 20px; font-size: 13px; font-weight: 600;
+    opacity: 0; pointer-events: none; transition: all .3s; z-index: 9999;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="scenario-bar">
+  <button class="scenario-btn active" id="btn-a" onclick="setScenario('no-user')">Scenario A — No User Version Yet</button>
+  <button class="scenario-btn" id="btn-b" onclick="setScenario('editing')">Scenario B — After Edit &amp; Save</button>
+</div>
+<div class="scenario-label" id="scenario-label">Scenario A: Only system-generated versions exist. User has never saved a travel path.</div>
+
+<div class="app-shell">
+
+  <!-- FULLSCREEN MAP -->
+  <div class="map-layer">
+    <svg class="map-svg" viewBox="0 0 1100 680" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <!-- Sky/background -->
+      <rect width="1100" height="680" fill="#f2f2f0"/>
+
+      <!-- Major road grid -->
+      <g stroke="#d4d4cf" stroke-width="14" fill="none">
+        <line x1="0" y1="120" x2="1100" y2="120"/>
+        <line x1="0" y1="260" x2="1100" y2="260"/>
+        <line x1="0" y1="400" x2="1100" y2="400"/>
+        <line x1="0" y1="540" x2="1100" y2="540"/>
+        <line x1="120" y1="0" x2="120" y2="680"/>
+        <line x1="300" y1="0" x2="300" y2="680"/>
+        <line x1="480" y1="0" x2="480" y2="680"/>
+        <line x1="660" y1="0" x2="660" y2="680"/>
+        <line x1="840" y1="0" x2="840" y2="680"/>
+        <line x1="980" y1="0" x2="980" y2="680"/>
+      </g>
+      <!-- Minor roads -->
+      <g stroke="#e2e2dd" stroke-width="6" fill="none">
+        <line x1="0" y1="190" x2="1100" y2="190"/>
+        <line x1="0" y1="330" x2="1100" y2="330"/>
+        <line x1="0" y1="470" x2="1100" y2="470"/>
+        <line x1="0" y1="610" x2="1100" y2="610"/>
+        <line x1="210" y1="0" x2="210" y2="680"/>
+        <line x1="390" y1="0" x2="390" y2="680"/>
+        <line x1="570" y1="0" x2="570" y2="680"/>
+        <line x1="750" y1="0" x2="750" y2="680"/>
+        <line x1="910" y1="0" x2="910" y2="680"/>
+      </g>
+
+      <!-- Road labels -->
+      <g font-size="10" fill="#aaa" font-family="sans-serif">
+        <text x="310" y="116">W Lamar Rd</text>
+        <text x="310" y="256">W Ocotillo Rd</text>
+        <text x="310" y="396">W Griffin Ave</text>
+        <text x="310" y="536">W Rose Ln</text>
+        <text x="122" y="200" transform="rotate(-90,122,200)">N 77th Ave</text>
+        <text x="482" y="200" transform="rotate(-90,482,200)">N 71st Ave</text>
+        <text x="662" y="200" transform="rotate(-90,662,200)">N Nob Hill</text>
+        <text x="982" y="200" transform="rotate(-90,982,200)">N Nsn Dr</text>
+      </g>
+
+      <!-- City blocks/parcels -->
+      <g fill="#ebebE6" stroke="#d8d8d3" stroke-width=".8">
+        <rect x="124" y="124" width="172" height="132"/>
+        <rect x="304" y="124" width="172" height="132"/>
+        <rect x="484" y="124" width="172" height="132"/>
+        <rect x="664" y="124" width="172" height="132"/>
+        <rect x="844" y="124" width="132" height="132"/>
+        <rect x="124" y="264" width="172" height="132"/>
+        <rect x="304" y="264" width="172" height="132"/>
+        <rect x="484" y="264" width="172" height="132"/>
+        <rect x="664" y="264" width="172" height="132"/>
+        <rect x="844" y="264" width="132" height="132"/>
+        <rect x="124" y="404" width="172" height="132"/>
+        <rect x="304" y="404" width="172" height="132"/>
+        <rect x="484" y="404" width="172" height="132"/>
+        <rect x="664" y="404" width="172" height="132"/>
+        <rect x="124" y="544" width="172" height="132"/>
+        <rect x="304" y="544" width="172" height="132"/>
+        <rect x="484" y="544" width="172" height="132"/>
+      </g>
+
+      <!-- Park / special area -->
+      <rect x="664" y="404" width="172" height="132" fill="#daebd8" stroke="#c5d9c3" stroke-width=".8"/>
+      <text x="735" y="475" font-size="9" fill="#7a9e7a" font-family="sans-serif">Park At Westgate</text>
+
+      <!-- School -->
+      <rect x="124" y="124" width="80" height="60" fill="#e8e4d8" stroke="#ccc" stroke-width=".8"/>
+      <text x="134" y="158" font-size="8" fill="#888" font-family="sans-serif">Independence</text>
+      <text x="134" y="168" font-size="8" fill="#888" font-family="sans-serif">High School</text>
+
+      <!-- Challenger Middle -->
+      <rect x="504" y="404" width="90" height="55" fill="#e8e4d8" stroke="#ccc" stroke-width=".8"/>
+      <text x="510" y="430" font-size="8" fill="#888" font-family="sans-serif">Challenger</text>
+      <text x="510" y="440" font-size="8" fill="#888" font-family="sans-serif">Middle School</text>
+
+      <!-- Blue travel path route (dashed, animated feel) -->
+      <g stroke="#3b9ee8" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Main grid traversal -->
+        <polyline points="150,124 150,260 300,260 300,124 480,124 480,260 660,260 660,124 840,124 840,260"/>
+        <polyline points="150,264 150,400 300,400 300,264 480,264 480,400"/>
+        <polyline points="150,404 150,540 300,540 300,404 480,404 480,540 660,540"/>
+        <polyline points="660,264 660,400 840,400 840,264"/>
+        <polyline points="660,404 660,540"/>
+      </g>
+
+      <!-- Dashed overlay on travel path -->
+      <g stroke="#fff" stroke-width="1.5" fill="none" stroke-dasharray="8,10" opacity=".5">
+        <polyline points="150,124 150,260 300,260 300,124 480,124 480,260 660,260 660,124 840,124 840,260"/>
+        <polyline points="150,264 150,400 300,400 300,264 480,264 480,400"/>
+        <polyline points="150,404 150,540 300,540 300,404 480,404 480,540 660,540"/>
+        <polyline points="660,264 660,400 840,400 840,264"/>
+      </g>
+
+      <!-- Direction arrows on path -->
+      <g fill="#2a8cd4">
+        <polygon points="220,257 213,250 227,250"/>
+        <polygon points="380,257 373,250 387,250"/>
+        <polygon points="560,257 553,250 567,250"/>
+        <polygon points="740,257 733,250 747,250"/>
+        <polygon points="840,190 847,183 847,197"/>
+        <polygon points="220,124 213,131 227,131"/>
+        <polygon points="380,124 373,131 387,131"/>
+        <polygon points="560,124 553,131 567,131"/>
+        <polygon points="220,397 213,390 227,390"/>
+        <polygon points="380,264 373,271 387,271"/>
+        <polygon points="220,537 213,530 227,530"/>
+        <polygon points="560,537 553,530 567,530"/>
+        <polygon points="480,332 487,325 487,339"/>
+        <polygon points="150,332 143,325 143,339"/>
+      </g>
+
+      <!-- Black route boundary -->
+      <rect x="132" y="116" width="730" height="438" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="5,3" rx="2"/>
+
+      <!-- Cyan stop markers right side -->
+      <g fill="#00bcd4">
+        <circle cx="984" cy="140" r="5"/>
+        <circle cx="984" cy="170" r="5"/>
+        <circle cx="984" cy="200" r="5"/>
+        <circle cx="984" cy="230" r="5"/>
+        <circle cx="984" cy="290" r="5"/>
+        <circle cx="984" cy="320" r="5"/>
+        <circle cx="984" cy="350" r="5"/>
+        <circle cx="984" cy="380" r="5"/>
+        <circle cx="984" cy="430" r="5"/>
+        <circle cx="984" cy="460" r="5"/>
+        <circle cx="984" cy="490" r="5"/>
+      </g>
+
+      <!-- Route number badge -->
+      <circle cx="480" cy="340" r="18" fill="#fff" stroke="#bbb" stroke-width="1.5"/>
+      <text x="480" y="345" text-anchor="middle" font-size="11" fill="#333" font-family="sans-serif" font-weight="600">AZ79</text>
+
+      <!-- Yard square (blue) -->
+      <rect x="155" y="560" width="42" height="30" fill="#4fc3f7" stroke="#2196f3" stroke-width="2" rx="3"/>
+
+      <!-- Location labels -->
+      <text x="126" y="575" font-size="8" fill="#999" font-family="sans-serif">Coyote Ridge School</text>
+      <text x="330" y="110" font-size="9" fill="#aaa" font-family="sans-serif">Morningstar Estates</text>
+      <text x="670" y="250" font-size="8" fill="#aaa" font-family="sans-serif">W Maryland Ave</text>
+      <text x="310" y="670" font-size="8" fill="#aaa" font-family="sans-serif">W Palo Verde Dr</text>
+      <text x="680" y="670" font-size="8" fill="#aaa" font-family="sans-serif">Skyview West I</text>
+      <text x="680" y="390" font-size="8" fill="#aaa" font-family="sans-serif">N Apartment</text>
+      <text x="850" y="340" font-size="8" fill="#aaa" font-family="sans-serif">Dealer Dealz</text>
+      <text x="850" y="460" font-size="8" fill="#aaa" font-family="sans-serif">A-1 Plaza</text>
+      <text x="350" y="480" font-size="8" fill="#aaa" font-family="sans-serif">Davis Springs</text>
+      <text x="850" y="395" font-size="8" fill="#aaa" font-family="sans-serif">N Apartment</text>
+      <text x="850" y="190" font-size="8" fill="#aaa" font-family="sans-serif">San Martin Apartments</text>
+    </svg>
+  </div>
+
+  <!-- FLOATING UI ELEMENTS -->
+
+  <!-- Top instructions panel (left) -->
+  <div class="float-instructions">
+    <button class="x-btn">×</button>
+    <ol>
+      <li>Select Starting Segment</li>
+      <li>Select Ending Segment</li>
+      <li>Draw Desired Path</li>
+      <li>Review and Save</li>
+    </ol>
+  </div>
+
+  <!-- Floating editor header (center) -->
+  <div class="float-editor-header">
+    <span class="editor-title">Travel Path Editor</span>
+    <div class="editor-divider"></div>
+    <span class="editor-route">MSW-THU-7</span>
+    <button class="editor-close">×</button>
+  </div>
+
+  <!-- Zoom panel (top-right) -->
+  <div style="position:absolute; top:12px; right:12px; z-index:20;">
+    <div class="zoom-panel">
+      <button class="zoom-btn">🔍</button>
+      <span style="font-size:13px;color:#333;">100%</span>
+      <button class="zoom-btn">＋</button>
+      <button class="zoom-btn">⛶</button>
+    </div>
+  </div>
+
+  <!-- Right map controls — floppy disk REMOVED; checkmark only visible while editing -->
+  <div class="float-map-controls" id="map-controls-right">
+    <div class="map-ctrl-btn" title="Cancel edit">×</div>
+    <div class="map-ctrl-btn" style="font-size:11px;" title="Undo">↩</div>
+    <!-- Checkmark: only shown while actively editing a segment -->
+    <div class="map-ctrl-btn" id="ctrl-checkmark" title="Apply path selection (visible during editing only)"
+         style="display:none; background:#1b2236; color:#fff; border-color:#1b2236;">✓</div>
+    <!-- Floppy disk REMOVED — save is now in the bottom bar only -->
+  </div>
+
+  <!-- Editing mode indicator strip -->
+  <div id="editing-banner" style="display:none; position:absolute; top:60px; left:50%; transform:translateX(-50%);
+    z-index:25; background:#1b2236; color:#fff; font-size:11px; font-weight:700;
+    padding:5px 16px; border-radius:20px; letter-spacing:.4px; pointer-events:none;
+    box-shadow:0 2px 8px rgba(0,0,0,.3);">
+    ✏ EDITING MODE — checkmark confirms segment selection
+  </div>
+
+  <!-- Demo toggle: simulate entering/exiting edit mode -->
+  <button id="edit-toggle-btn" onclick="toggleEditMode()"
+    style="position:absolute; top:130px; right:12px; z-index:25;
+    background:rgba(255,255,255,.95); border:1px solid #d0d0d0; border-radius:6px;
+    padding:6px 10px; font-size:10px; font-weight:700; color:#333; cursor:pointer;
+    box-shadow:0 1px 4px rgba(0,0,0,.1); backdrop-filter:blur(8px); white-space:nowrap;">
+    ▶ Simulate Edit Mode
+  </button>
+
+  <!-- Acend label -->
+  <div class="float-acend">Acend On Glendale</div>
+
+  <!-- Left zoom controls -->
+  <div class="float-zoom-left">
+    <div class="zoom-circle">＋</div>
+    <div class="zoom-circle" style="font-size:13px;">－</div>
+    <div class="zoom-circle" style="font-size:10px;">ℹ</div>
+    <div class="zoom-circle" style="font-size:10px;">⊞</div>
+  </div>
+
+  <!-- Legend -->
+  <div class="float-legend">Legend ▾</div>
+
+  <!-- Bottom pill bar -->
+  <div class="float-bottom">
+    <div class="bottom-pill">
+      <span class="pill-label">Travel Path Editor</span>
+      <div class="pill-divider"></div>
+      <span class="pill-route">MSW-THU-7</span>
+      <div class="pill-divider"></div>
+      <span class="pill-version" id="pill-version">Version 3</span>
+      <div class="pill-divider"></div>
+      <button class="version-history-btn" onclick="openVH()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="8" cy="8" r="6.5"/>
+          <polyline points="8,4.5 8,8 10.5,10"/>
+        </svg>
+        Version History
+      </button>
+      <button class="save-btn" onclick="openSave()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M2 2h9l3 3v9H2V2zm5 10a2 2 0 100-4 2 2 0 000 4zm1-8H5v3h3V4z"/>
+        </svg>
+        Save Changes
+      </button>
+    </div>
+  </div>
+
+  <!-- Version History Overlay -->
+  <div class="vh-overlay" id="vh-overlay">
+    <div class="vh-modal" id="vh-modal">
+      <div class="vh-header">
+        <span class="vh-title">Version History</span>
+        <button class="vh-close" onclick="closeVH()">×</button>
+      </div>
+      <p class="vh-subtitle">Select a version to edit</p>
+      <div id="vh-content"></div>
+    </div>
+  </div>
+
+  <!-- Save confirmation overlay -->
+  <div class="save-overlay" id="save-overlay">
+    <div class="save-modal">
+      <div class="save-modal-title">Save Travel Path</div>
+      <div class="save-modal-body">
+        Saving will create a new version (<strong>Version <span id="next-version-num">4</span></strong>) of this travel path.<br><br>
+        Your edits will be stored as a <strong>User</strong> version and will become the active path.
+      </div>
+      <div class="save-modal-actions">
+        <button class="btn-secondary" onclick="closeSave()">Cancel</button>
+        <button class="btn-primary" onclick="confirmSave()">Save &amp; Set Active</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end app-shell -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+let scenario = 'no-user';
+
+// Scenario A: only 2 options shown — currently displayed + last system-generated.
+// "Last user-saved" option is hidden because no user has ever saved a travel path.
+const versionsNoUser = [
+  { id: 3, type: 'system', isActive: true,  label: 'Currently Displayed', date: 'Mar 3, 2026, 10:15 AM', author: 'Route Optimizer',  desc: 'Optimized path through Independence High School area' },
+  { id: 2, type: 'system', isActive: false, label: 'Last System-Generated', date: 'Mar 2, 2026, 04:45 PM', author: 'Segment Updater',  desc: 'Updated segments near Challenger Middle School' }
+];
+
+// Scenario B: all 3 options shown — currently displayed (user-saved = active), last system-generated, and one prior system version.
+const versionsAfterSave = [
+  { id: 4, type: 'user',   isActive: true,  label: 'Currently Displayed · Last User-Saved', date: 'Apr 9, 2026, 09:38 AM', author: 'Sarah Johnson',   desc: 'Added new residential route on W Maryland Ave' },
+  { id: 3, type: 'system', isActive: false, label: 'Last System-Generated', date: 'Mar 3, 2026, 10:15 AM', author: 'Route Optimizer',  desc: 'Optimized path through Independence High School area' },
+  { id: 2, type: 'system', isActive: false, label: '',                      date: 'Mar 2, 2026, 04:45 PM', author: 'Segment Updater',  desc: 'Updated segments near Challenger Middle School' }
+];
+
+function getVersions() { return scenario === 'no-user' ? versionsNoUser : versionsAfterSave; }
+
+function renderVersions() {
+  const versions = getVersions();
+  let html = '';
+
+  if (scenario === 'no-user') {
+    html += `<div class="no-user-notice">
+      <strong>⚠ No user-saved version available</strong>
+      Showing 2 of 3 possible options. The <em>Last User-Saved</em> option will appear here once you edit and save a travel path for the first time.
+    </div>`;
+  }
+
+  versions.forEach(v => {
+    const badgeHtml = v.type === 'user'
+      ? `<span class="badge-user">👤 User</span>`
+      : `<span class="badge-system">⚙ System</span>`;
+    const activeBadge = v.isActive ? `<span class="badge-active">✓ Active</span>` : '';
+    const labelHtml = v.label ? `<span style="font-size:10px;color:#888;font-weight:500;margin-left:4px;">(${v.label})</span>` : '';
+
+    html += `<div class="version-card ${v.isActive ? 'active-card' : ''}">
+      <div class="vc-top">
+        <span class="vc-name">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 10.5,10"/></svg>
+          Version ${v.id}${labelHtml}
+        </span>
+        <div class="vc-badges">${badgeHtml}${activeBadge}</div>
+      </div>
+      <div class="vc-date">${v.date}</div>
+      <div class="vc-author">by ${v.author}</div>
+      <div class="vc-desc">${v.desc}</div>
+      ${!v.isActive ? `<button class="make-active-btn" onclick="makeActive(${v.id})">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2,8 6,12 14,4"/></svg>
+        Make Active
+      </button>` : ''}
+    </div>`;
+  });
+
+  document.getElementById('vh-content').innerHTML = html;
+}
+
+function makeActive(id) {
+  getVersions().forEach(v => v.isActive = (v.id === id));
+  document.getElementById('pill-version').textContent = `Version ${id}`;
+  renderVersions();
+  closeVH();
+  showToast(`Version ${id} is now active`);
+}
+
+function openVH() { renderVersions(); document.getElementById('vh-overlay').classList.add('open'); }
+function closeVH() { document.getElementById('vh-overlay').classList.remove('open'); }
+
+function openSave() {
+  document.getElementById('next-version-num').textContent = scenario === 'no-user' ? 4 : 5;
+  document.getElementById('save-overlay').classList.add('open');
+}
+function closeSave() { document.getElementById('save-overlay').classList.remove('open'); }
+
+function confirmSave() {
+  closeSave();
+  setScenario('editing');
+  showToast('Travel path saved — Version 4 created and set as active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function setScenario(s) {
+  scenario = s;
+  document.getElementById('btn-a').classList.toggle('active', s === 'no-user');
+  document.getElementById('btn-b').classList.toggle('active', s === 'editing');
+  document.getElementById('scenario-label').textContent = s === 'no-user'
+    ? 'Scenario A: Only system-generated versions exist. User has never saved a travel path.'
+    : 'Scenario B: User edited and saved. Version 4 is now the active user version.';
+  document.getElementById('pill-version').textContent = s === 'no-user' ? 'Version 3' : 'Version 4';
+  versionsNoUser.forEach((v,i) => v.isActive = i === 0);
+  versionsAfterSave.forEach((v,i) => v.isActive = i === 0);
+  document.getElementById('vh-overlay').classList.remove('open');
+  document.getElementById('save-overlay').classList.remove('open');
+}
+
+// ── Edit mode simulation ──
+let editMode = false;
+function toggleEditMode() {
+  editMode = !editMode;
+  const btn = document.getElementById('edit-toggle-btn');
+  const checkmark = document.getElementById('ctrl-checkmark');
+  const banner = document.getElementById('editing-banner');
+
+  if (editMode) {
+    btn.textContent = '⏹ Exit Edit Mode';
+    btn.style.background = 'rgba(27,34,54,.9)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = '#1b2236';
+    checkmark.style.display = 'flex';
+    banner.style.display = 'block';
+  } else {
+    btn.textContent = '▶ Simulate Edit Mode';
+    btn.style.background = 'rgba(255,255,255,.95)';
+    btn.style.color = '#333';
+    btn.style.borderColor = '#d0d0d0';
+    checkmark.style.display = 'none';
+    banner.style.display = 'none';
+  }
+}
+
+// Close modals on backdrop click
+document.getElementById('vh-overlay').addEventListener('click', e => { if (e.target === document.getElementById('vh-overlay')) closeVH(); });
+document.getElementById('save-overlay').addEventListener('click', e => { if (e.target === document.getElementById('save-overlay')) closeSave(); });
+</script>
+</body>
+</html>
