@@ -58,9 +58,9 @@
 
   /* ── App shell — full screen map ── */
   .app-shell {
-    width: 1100px;
+    width: 1400px;
     max-width: 100%;
-    height: 680px;
+    height: 760px;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 30px 80px rgba(0,0,0,.6);
@@ -291,26 +291,26 @@
     border: 1px solid rgba(0,0,0,.08);
     white-space: nowrap;
   }
-  .pill-label { font-size: 13px; font-weight: 700; color: #111; }
-  .pill-route { font-size: 13px; color: #555; font-weight: 500; }
-  .pill-version { font-size: 13px; color: #555; font-weight: 500; }
-  .pill-divider { width: 1px; height: 16px; background: #e0e0e0; }
+  .pill-label { font-size: 14px; font-weight: 700; color: #111; }
+  .pill-route { font-size: 14px; color: #555; font-weight: 500; }
+  .pill-version { font-size: 14px; color: #555; font-weight: 500; }
+  .pill-divider { width: 1px; height: 18px; background: #e0e0e0; }
 
   .version-history-btn {
     display: flex; align-items: center; gap: 6px;
     background: none; border: 1px solid #d0d0d0;
-    border-radius: 6px; padding: 6px 12px;
-    font-size: 12px; font-weight: 600; color: #333;
-    cursor: pointer; transition: all .15s;
+    border-radius: 6px; padding: 8px 16px;
+    font-size: 13px; font-weight: 600; color: #333;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
   }
   .version-history-btn:hover { background: #f0f5ff; border-color: #2563eb; color: #2563eb; }
 
   .save-btn {
     display: flex; align-items: center; gap: 6px;
     background: #1b2236; border: none;
-    border-radius: 6px; padding: 7px 14px;
-    font-size: 12px; font-weight: 600; color: #fff;
-    cursor: pointer; transition: all .15s;
+    border-radius: 6px; padding: 9px 18px;
+    font-size: 13px; font-weight: 600; color: #fff;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
   }
   .save-btn:hover { background: #2a3a60; }
 
@@ -328,8 +328,8 @@
   .vh-modal {
     background: #fff;
     border-radius: 12px;
-    width: 340px;
-    max-height: 480px;
+    width: 420px;
+    max-height: 520px;
     overflow-y: auto;
     box-shadow: 0 24px 64px rgba(0,0,0,.35);
     transform: translateY(10px) scale(.98);
@@ -430,7 +430,7 @@
   .save-modal {
     background: #fff;
     border-radius: 12px;
-    width: 360px;
+    width: 440px;
     padding: 24px;
     box-shadow: 0 24px 64px rgba(0,0,0,.35);
     transform: translateY(10px) scale(.98);
@@ -481,34 +481,40 @@
 
   <!-- FULLSCREEN MAP -->
   <div class="map-layer">
-    <svg class="map-svg" viewBox="0 0 1100 680" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-      <!-- Sky/background -->
-      <rect width="1100" height="680" fill="#f2f2f0"/>
+    <svg class="map-svg" viewBox="0 0 1400 760" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <!-- Background -->
+      <rect width="1400" height="760" fill="#f2f2f0"/>
 
       <!-- Major road grid -->
       <g stroke="#d4d4cf" stroke-width="14" fill="none">
-        <line x1="0" y1="120" x2="1100" y2="120"/>
-        <line x1="0" y1="260" x2="1100" y2="260"/>
-        <line x1="0" y1="400" x2="1100" y2="400"/>
-        <line x1="0" y1="540" x2="1100" y2="540"/>
-        <line x1="120" y1="0" x2="120" y2="680"/>
-        <line x1="300" y1="0" x2="300" y2="680"/>
-        <line x1="480" y1="0" x2="480" y2="680"/>
-        <line x1="660" y1="0" x2="660" y2="680"/>
-        <line x1="840" y1="0" x2="840" y2="680"/>
-        <line x1="980" y1="0" x2="980" y2="680"/>
+        <line x1="0" y1="120" x2="1400" y2="120"/>
+        <line x1="0" y1="260" x2="1400" y2="260"/>
+        <line x1="0" y1="400" x2="1400" y2="400"/>
+        <line x1="0" y1="540" x2="1400" y2="540"/>
+        <line x1="0" y1="680" x2="1400" y2="680"/>
+        <line x1="120" y1="0" x2="120" y2="760"/>
+        <line x1="300" y1="0" x2="300" y2="760"/>
+        <line x1="480" y1="0" x2="480" y2="760"/>
+        <line x1="660" y1="0" x2="660" y2="760"/>
+        <line x1="840" y1="0" x2="840" y2="760"/>
+        <line x1="1020" y1="0" x2="1020" y2="760"/>
+        <line x1="1200" y1="0" x2="1200" y2="760"/>
+        <line x1="1340" y1="0" x2="1340" y2="760"/>
       </g>
       <!-- Minor roads -->
       <g stroke="#e2e2dd" stroke-width="6" fill="none">
-        <line x1="0" y1="190" x2="1100" y2="190"/>
-        <line x1="0" y1="330" x2="1100" y2="330"/>
-        <line x1="0" y1="470" x2="1100" y2="470"/>
-        <line x1="0" y1="610" x2="1100" y2="610"/>
-        <line x1="210" y1="0" x2="210" y2="680"/>
-        <line x1="390" y1="0" x2="390" y2="680"/>
-        <line x1="570" y1="0" x2="570" y2="680"/>
-        <line x1="750" y1="0" x2="750" y2="680"/>
-        <line x1="910" y1="0" x2="910" y2="680"/>
+        <line x1="0" y1="190" x2="1400" y2="190"/>
+        <line x1="0" y1="330" x2="1400" y2="330"/>
+        <line x1="0" y1="470" x2="1400" y2="470"/>
+        <line x1="0" y1="610" x2="1400" y2="610"/>
+        <line x1="0" y1="720" x2="1400" y2="720"/>
+        <line x1="210" y1="0" x2="210" y2="760"/>
+        <line x1="390" y1="0" x2="390" y2="760"/>
+        <line x1="570" y1="0" x2="570" y2="760"/>
+        <line x1="750" y1="0" x2="750" y2="760"/>
+        <line x1="930" y1="0" x2="930" y2="760"/>
+        <line x1="1110" y1="0" x2="1110" y2="760"/>
+        <line x1="1270" y1="0" x2="1270" y2="760"/>
       </g>
 
       <!-- Road labels -->
@@ -517,120 +523,133 @@
         <text x="310" y="256">W Ocotillo Rd</text>
         <text x="310" y="396">W Griffin Ave</text>
         <text x="310" y="536">W Rose Ln</text>
+        <text x="310" y="676">W Peck Dr</text>
         <text x="122" y="200" transform="rotate(-90,122,200)">N 77th Ave</text>
         <text x="482" y="200" transform="rotate(-90,482,200)">N 71st Ave</text>
         <text x="662" y="200" transform="rotate(-90,662,200)">N Nob Hill</text>
-        <text x="982" y="200" transform="rotate(-90,982,200)">N Nsn Dr</text>
+        <text x="1022" y="200" transform="rotate(-90,1022,200)">N Maryland</text>
+        <text x="1202" y="200" transform="rotate(-90,1202,200)">N Nsn Dr</text>
       </g>
 
-      <!-- City blocks/parcels -->
+      <!-- City blocks -->
       <g fill="#ebebE6" stroke="#d8d8d3" stroke-width=".8">
         <rect x="124" y="124" width="172" height="132"/>
         <rect x="304" y="124" width="172" height="132"/>
         <rect x="484" y="124" width="172" height="132"/>
         <rect x="664" y="124" width="172" height="132"/>
-        <rect x="844" y="124" width="132" height="132"/>
+        <rect x="844" y="124" width="172" height="132"/>
+        <rect x="1024" y="124" width="172" height="132"/>
         <rect x="124" y="264" width="172" height="132"/>
         <rect x="304" y="264" width="172" height="132"/>
         <rect x="484" y="264" width="172" height="132"/>
         <rect x="664" y="264" width="172" height="132"/>
-        <rect x="844" y="264" width="132" height="132"/>
+        <rect x="844" y="264" width="172" height="132"/>
+        <rect x="1024" y="264" width="172" height="132"/>
         <rect x="124" y="404" width="172" height="132"/>
         <rect x="304" y="404" width="172" height="132"/>
         <rect x="484" y="404" width="172" height="132"/>
         <rect x="664" y="404" width="172" height="132"/>
+        <rect x="844" y="404" width="172" height="132"/>
+        <rect x="1024" y="404" width="172" height="132"/>
         <rect x="124" y="544" width="172" height="132"/>
         <rect x="304" y="544" width="172" height="132"/>
         <rect x="484" y="544" width="172" height="132"/>
+        <rect x="664" y="544" width="172" height="132"/>
+        <rect x="844" y="544" width="172" height="132"/>
+        <rect x="1024" y="544" width="172" height="132"/>
+        <rect x="124" y="684" width="172" height="72"/>
+        <rect x="304" y="684" width="172" height="72"/>
+        <rect x="484" y="684" width="172" height="72"/>
       </g>
 
-      <!-- Park / special area -->
+      <!-- Park -->
       <rect x="664" y="404" width="172" height="132" fill="#daebd8" stroke="#c5d9c3" stroke-width=".8"/>
-      <text x="735" y="475" font-size="9" fill="#7a9e7a" font-family="sans-serif">Park At Westgate</text>
+      <text x="730" y="475" font-size="9" fill="#7a9e7a" font-family="sans-serif">Park At Westgate</text>
 
-      <!-- School -->
+      <!-- Schools -->
       <rect x="124" y="124" width="80" height="60" fill="#e8e4d8" stroke="#ccc" stroke-width=".8"/>
       <text x="134" y="158" font-size="8" fill="#888" font-family="sans-serif">Independence</text>
       <text x="134" y="168" font-size="8" fill="#888" font-family="sans-serif">High School</text>
-
-      <!-- Challenger Middle -->
       <rect x="504" y="404" width="90" height="55" fill="#e8e4d8" stroke="#ccc" stroke-width=".8"/>
       <text x="510" y="430" font-size="8" fill="#888" font-family="sans-serif">Challenger</text>
       <text x="510" y="440" font-size="8" fill="#888" font-family="sans-serif">Middle School</text>
 
-      <!-- Blue travel path route (dashed, animated feel) -->
+      <!-- Blue travel path (extended across full width) -->
       <g stroke="#3b9ee8" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <!-- Main grid traversal -->
-        <polyline points="150,124 150,260 300,260 300,124 480,124 480,260 660,260 660,124 840,124 840,260"/>
-        <polyline points="150,264 150,400 300,400 300,264 480,264 480,400"/>
-        <polyline points="150,404 150,540 300,540 300,404 480,404 480,540 660,540"/>
-        <polyline points="660,264 660,400 840,400 840,264"/>
-        <polyline points="660,404 660,540"/>
+        <polyline points="150,124 150,260 300,260 300,124 480,124 480,260 660,260 660,124 840,124 840,260 1020,260 1020,124 1200,124 1200,260"/>
+        <polyline points="150,264 150,400 300,400 300,264 480,264 480,400 660,400"/>
+        <polyline points="150,404 150,540 300,540 300,404 480,404 480,540 660,540 840,540"/>
+        <polyline points="660,264 660,400 840,400 840,264 1020,264 1020,400"/>
+        <polyline points="660,404 660,540 840,540"/>
+        <polyline points="150,544 150,680 300,680 300,544"/>
       </g>
-
-      <!-- Dashed overlay on travel path -->
+      <!-- Dashed highlight -->
       <g stroke="#fff" stroke-width="1.5" fill="none" stroke-dasharray="8,10" opacity=".5">
-        <polyline points="150,124 150,260 300,260 300,124 480,124 480,260 660,260 660,124 840,124 840,260"/>
-        <polyline points="150,264 150,400 300,400 300,264 480,264 480,400"/>
-        <polyline points="150,404 150,540 300,540 300,404 480,404 480,540 660,540"/>
-        <polyline points="660,264 660,400 840,400 840,264"/>
+        <polyline points="150,124 150,260 300,260 300,124 480,124 480,260 660,260 660,124 840,124 840,260 1020,260 1020,124 1200,124 1200,260"/>
+        <polyline points="150,264 150,400 300,400 300,264 480,264 480,400 660,400"/>
+        <polyline points="150,404 150,540 300,540 300,404 480,404 480,540 660,540 840,540"/>
+        <polyline points="660,264 660,400 840,400 840,264 1020,264 1020,400"/>
       </g>
-
-      <!-- Direction arrows on path -->
+      <!-- Direction arrows -->
       <g fill="#2a8cd4">
         <polygon points="220,257 213,250 227,250"/>
         <polygon points="380,257 373,250 387,250"/>
         <polygon points="560,257 553,250 567,250"/>
         <polygon points="740,257 733,250 747,250"/>
-        <polygon points="840,190 847,183 847,197"/>
+        <polygon points="920,257 913,250 927,250"/>
+        <polygon points="1100,257 1093,250 1107,250"/>
         <polygon points="220,124 213,131 227,131"/>
         <polygon points="380,124 373,131 387,131"/>
         <polygon points="560,124 553,131 567,131"/>
+        <polygon points="740,124 733,131 747,131"/>
+        <polygon points="920,124 913,131 927,131"/>
         <polygon points="220,397 213,390 227,390"/>
         <polygon points="380,264 373,271 387,271"/>
         <polygon points="220,537 213,530 227,530"/>
         <polygon points="560,537 553,530 567,530"/>
         <polygon points="480,332 487,325 487,339"/>
         <polygon points="150,332 143,325 143,339"/>
+        <polygon points="840,332 847,325 847,339"/>
+        <polygon points="1020,332 1027,325 1027,339"/>
+        <polygon points="740,397 733,390 747,390"/>
+        <polygon points="740,264 733,271 747,271"/>
+        <polygon points="220,677 213,670 227,670"/>
+        <polygon points="150,612 143,605 143,619"/>
       </g>
-
-      <!-- Black route boundary -->
-      <rect x="132" y="116" width="730" height="438" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="5,3" rx="2"/>
-
+      <!-- Route boundary -->
+      <rect x="132" y="116" width="1090" height="578" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="5,3" rx="2"/>
       <!-- Cyan stop markers right side -->
       <g fill="#00bcd4">
-        <circle cx="984" cy="140" r="5"/>
-        <circle cx="984" cy="170" r="5"/>
-        <circle cx="984" cy="200" r="5"/>
-        <circle cx="984" cy="230" r="5"/>
-        <circle cx="984" cy="290" r="5"/>
-        <circle cx="984" cy="320" r="5"/>
-        <circle cx="984" cy="350" r="5"/>
-        <circle cx="984" cy="380" r="5"/>
-        <circle cx="984" cy="430" r="5"/>
-        <circle cx="984" cy="460" r="5"/>
-        <circle cx="984" cy="490" r="5"/>
+        <circle cx="1344" cy="140" r="5"/>
+        <circle cx="1344" cy="170" r="5"/>
+        <circle cx="1344" cy="200" r="5"/>
+        <circle cx="1344" cy="230" r="5"/>
+        <circle cx="1344" cy="290" r="5"/>
+        <circle cx="1344" cy="320" r="5"/>
+        <circle cx="1344" cy="350" r="5"/>
+        <circle cx="1344" cy="380" r="5"/>
+        <circle cx="1344" cy="430" r="5"/>
+        <circle cx="1344" cy="460" r="5"/>
+        <circle cx="1344" cy="490" r="5"/>
+        <circle cx="1344" cy="520" r="5"/>
+        <circle cx="1344" cy="560" r="5"/>
+        <circle cx="1344" cy="590" r="5"/>
       </g>
-
-      <!-- Route number badge -->
-      <circle cx="480" cy="340" r="18" fill="#fff" stroke="#bbb" stroke-width="1.5"/>
-      <text x="480" y="345" text-anchor="middle" font-size="11" fill="#333" font-family="sans-serif" font-weight="600">AZ79</text>
-
-      <!-- Yard square (blue) -->
-      <rect x="155" y="560" width="42" height="30" fill="#4fc3f7" stroke="#2196f3" stroke-width="2" rx="3"/>
-
-      <!-- Location labels -->
-      <text x="126" y="575" font-size="8" fill="#999" font-family="sans-serif">Coyote Ridge School</text>
+      <!-- Route badge -->
+      <circle cx="660" cy="340" r="18" fill="#fff" stroke="#bbb" stroke-width="1.5"/>
+      <text x="660" y="345" text-anchor="middle" font-size="11" fill="#333" font-family="sans-serif" font-weight="600">AZ79</text>
+      <!-- Yard square -->
+      <rect x="155" y="695" width="42" height="30" fill="#4fc3f7" stroke="#2196f3" stroke-width="2" rx="3"/>
+      <!-- Labels -->
+      <text x="126" y="738" font-size="8" fill="#999" font-family="sans-serif">Coyote Ridge School</text>
       <text x="330" y="110" font-size="9" fill="#aaa" font-family="sans-serif">Morningstar Estates</text>
       <text x="670" y="250" font-size="8" fill="#aaa" font-family="sans-serif">W Maryland Ave</text>
-      <text x="310" y="670" font-size="8" fill="#aaa" font-family="sans-serif">W Palo Verde Dr</text>
-      <text x="680" y="670" font-size="8" fill="#aaa" font-family="sans-serif">Skyview West I</text>
-      <text x="680" y="390" font-size="8" fill="#aaa" font-family="sans-serif">N Apartment</text>
-      <text x="850" y="340" font-size="8" fill="#aaa" font-family="sans-serif">Dealer Dealz</text>
-      <text x="850" y="460" font-size="8" fill="#aaa" font-family="sans-serif">A-1 Plaza</text>
+      <text x="850" y="530" font-size="8" fill="#aaa" font-family="sans-serif">A-1 Plaza</text>
       <text x="350" y="480" font-size="8" fill="#aaa" font-family="sans-serif">Davis Springs</text>
-      <text x="850" y="395" font-size="8" fill="#aaa" font-family="sans-serif">N Apartment</text>
-      <text x="850" y="190" font-size="8" fill="#aaa" font-family="sans-serif">San Martin Apartments</text>
+      <text x="1030" y="180" font-size="8" fill="#aaa" font-family="sans-serif">San Martin Apts</text>
+      <text x="850" y="180" font-size="8" fill="#aaa" font-family="sans-serif">Dealer Dealz</text>
+      <text x="480" y="750" font-size="8" fill="#aaa" font-family="sans-serif">Skyview West I</text>
+      <text x="680" y="750" font-size="8" fill="#aaa" font-family="sans-serif">W Palo Verde Dr</text>
     </svg>
   </div>
 
