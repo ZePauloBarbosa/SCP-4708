@@ -455,7 +455,33 @@
   }
   .btn-primary:hover { background: #1d4ed8; }
 
-  /* ── Toast ── */
+  /* ── Rename input ── */
+  .rename-input {
+    border: 1px solid #2563eb;
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #111;
+    outline: none;
+    width: 160px;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+  }
+  .rename-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 11px; color: #aaa; padding: 0 0 0 6px;
+    transition: color .15s;
+  }
+  .rename-btn:hover { color: #2563eb; }
+
+  /* ── Bottom bar doc note ── */
+  .bar-note {
+    font-size: 10px; color: #aaa;
+    text-align: center;
+    margin-top: 5px;
+    letter-spacing: .2px;
+  }
   .toast {
     position: fixed; bottom: 30px; left: 50%;
     transform: translateX(-50%) translateY(20px);
@@ -719,13 +745,13 @@
   <div class="float-legend">Legend ▾</div>
 
   <!-- Bottom pill bar -->
-  <div class="float-bottom">
+  <div class="float-bottom" style="flex-direction:column; gap:6px;">
     <div class="bottom-pill">
       <span class="pill-label">Travel Path Editor</span>
       <div class="pill-divider"></div>
       <span class="pill-route">MSW-THU-7</span>
       <div class="pill-divider"></div>
-      <span class="pill-version" id="pill-version">Version 3</span>
+      <span class="pill-version" id="pill-version" title="Click to rename" onclick="startRenameFromPill()" style="cursor:pointer; border-bottom: 1px dashed #bbb;">Version 3</span>
       <div class="pill-divider"></div>
       <button class="version-history-btn" onclick="openVH()">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -740,6 +766,9 @@
         </svg>
         Save Changes
       </button>
+    </div>
+    <div class="bar-note">
+      ⬆ New bottom bar — always visible in Travel Path Editor &nbsp;|&nbsp; Version name is editable (click to rename) &nbsp;|&nbsp; Save is now exclusively here — floppy disk icon removed from side panel
     </div>
   </div>
 
@@ -793,6 +822,59 @@ const versionsAfterSave = [
 
 function getVersions() { return scenario === 'no-user' ? versionsNoUser : versionsAfterSave; }
 
+function getVersionById(id) {
+  return getVersions().find(v => v.id === id);
+}
+
+function startRename(id) {
+  const v = getVersionById(id);
+  const nameEl = document.getElementById(`vc-name-${id}`);
+  const current = v.customName || `Version ${id}`;
+  nameEl.innerHTML = `
+    <input class="rename-input" id="rename-input-${id}" value="${current}" maxlength="40"
+      onkeydown="handleRenameKey(event, ${id})" autofocus/>
+    <button class="make-active-btn" style="width:auto;margin:0;padding:4px 10px;font-size:11px;" onclick="confirmRename(${id})">✓ Save</button>
+    <button class="rename-btn" onclick="cancelRename(${id})" style="font-size:12px;color:#e55;">✕</button>
+  `;
+  document.getElementById(`rename-input-${id}`).focus();
+}
+
+function handleRenameKey(e, id) {
+  if (e.key === 'Enter') confirmRename(id);
+  if (e.key === 'Escape') cancelRename(id);
+}
+
+function confirmRename(id) {
+  const input = document.getElementById(`rename-input-${id}`);
+  if (!input) return;
+  const newName = input.value.trim() || `Version ${id}`;
+  const v = getVersionById(id);
+  v.customName = newName;
+  // If this is the active version, update the pill too
+  if (v.isActive) document.getElementById('pill-version').textContent = newName;
+  renderVersions();
+  showToast(`Renamed to "${newName}"`);
+}
+
+function cancelRename(id) {
+  renderVersions();
+}
+
+function startRenameFromPill() {
+  const active = getVersions().find(v => v.isActive);
+  if (!active) return;
+  // Open VH modal and trigger rename on active version
+  openVH();
+  setTimeout(() => startRename(active.id), 50);
+}
+
+function updatePillVersion() {
+  const active = getVersions().find(v => v.isActive);
+  if (active) {
+    document.getElementById('pill-version').textContent = active.customName || `Version ${active.id}`;
+  }
+}
+
 function renderVersions() {
   const versions = getVersions();
   let html = '';
@@ -809,13 +891,14 @@ function renderVersions() {
       ? `<span class="badge-user">👤 User</span>`
       : `<span class="badge-system">⚙ System</span>`;
     const activeBadge = v.isActive ? `<span class="badge-active">✓ Active</span>` : '';
-    const labelHtml = v.label ? `<span style="font-size:10px;color:#888;font-weight:500;margin-left:4px;">(${v.label})</span>` : '';
+    const labelHtml = v.label ? `<span style="font-size:11px;color:#888;font-weight:400;margin-left:4px;">(${v.label})</span>` : '';
 
     html += `<div class="version-card ${v.isActive ? 'active-card' : ''}">
       <div class="vc-top">
-        <span class="vc-name">
+        <span class="vc-name" id="vc-name-${v.id}">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 10.5,10"/></svg>
-          Version ${v.id}${labelHtml}
+          ${v.customName || ('Version ' + v.id)}${labelHtml}
+          <button class="rename-btn" onclick="startRename(${v.id})" title="Rename this version">✏</button>
         </span>
         <div class="vc-badges">${badgeHtml}${activeBadge}</div>
       </div>
@@ -834,10 +917,11 @@ function renderVersions() {
 
 function makeActive(id) {
   getVersions().forEach(v => v.isActive = (v.id === id));
-  document.getElementById('pill-version').textContent = `Version ${id}`;
+  const v = getVersionById(id);
+  document.getElementById('pill-version').textContent = v.customName || `Version ${id}`;
   renderVersions();
   closeVH();
-  showToast(`Version ${id} is now active`);
+  showToast(`${v.customName || 'Version ' + id} is now active`);
 }
 
 function openVH() { renderVersions(); document.getElementById('vh-overlay').classList.add('open'); }
