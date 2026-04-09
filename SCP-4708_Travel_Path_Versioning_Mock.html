@@ -472,6 +472,8 @@
 <div class="scenario-bar">
   <button class="scenario-btn active" id="btn-a" onclick="setScenario('no-user')">Scenario A — No User Version Yet</button>
   <button class="scenario-btn" id="btn-b" onclick="setScenario('editing')">Scenario B — After Edit &amp; Save</button>
+  <div style="width:1px; background:#1e2640; margin:4px 2px;"></div>
+  <button class="scenario-btn" id="edit-toggle-btn" onclick="toggleEditMode()" style="color:#f59e0b;">✏ Simulate Edit Mode</button>
 </div>
 <div class="scenario-label" id="scenario-label">Scenario A: Only system-generated versions exist. User has never saved a travel path.</div>
 
@@ -681,14 +683,7 @@
     ✏ EDITING MODE — checkmark confirms segment selection
   </div>
 
-  <!-- Demo toggle: simulate entering/exiting edit mode -->
-  <button id="edit-toggle-btn" onclick="toggleEditMode()"
-    style="position:absolute; top:130px; right:12px; z-index:25;
-    background:rgba(255,255,255,.95); border:1px solid #d0d0d0; border-radius:6px;
-    padding:6px 10px; font-size:10px; font-weight:700; color:#333; cursor:pointer;
-    box-shadow:0 1px 4px rgba(0,0,0,.1); backdrop-filter:blur(8px); white-space:nowrap;">
-    ▶ Simulate Edit Mode
-  </button>
+
 
   <!-- Acend label -->
   <div class="float-acend">Acend On Glendale</div>
@@ -862,7 +857,6 @@ function setScenario(s) {
   document.getElementById('save-overlay').classList.remove('open');
 }
 
-// ── Edit mode simulation ──
 let editMode = false;
 function toggleEditMode() {
   editMode = !editMode;
@@ -872,16 +866,16 @@ function toggleEditMode() {
 
   if (editMode) {
     btn.textContent = '⏹ Exit Edit Mode';
-    btn.style.background = 'rgba(27,34,54,.9)';
-    btn.style.color = '#fff';
-    btn.style.borderColor = '#1b2236';
+    btn.style.background = '#f59e0b';
+    btn.style.color = '#1a1f2e';
+    btn.style.fontWeight = '700';
     checkmark.style.display = 'flex';
     banner.style.display = 'block';
   } else {
-    btn.textContent = '▶ Simulate Edit Mode';
-    btn.style.background = 'rgba(255,255,255,.95)';
-    btn.style.color = '#333';
-    btn.style.borderColor = '#d0d0d0';
+    btn.textContent = '✏ Simulate Edit Mode';
+    btn.style.background = 'transparent';
+    btn.style.color = '#f59e0b';
+    btn.style.fontWeight = '600';
     checkmark.style.display = 'none';
     banner.style.display = 'none';
   }
