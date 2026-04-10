@@ -507,7 +507,10 @@
 
   <!-- FULLSCREEN MAP -->
   <div class="map-layer">
-    <svg class="map-svg" viewBox="0 0 1400 760" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+    <svg class="map-svg" viewBox="0 0 1400 760" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice"
+         role="img" aria-label="Travel path map for route MSW-THU-7. When editing, amber dashed segments indicate unsaved path changes.">
+      <title>Travel Path Map — MSW-THU-7</title>
+      <desc>Map showing the travel path for route MSW-THU-7. Blue lines show the existing path. When in edit mode, amber dashed lines with animated white dashes indicate edited segments that have not yet been saved.</desc>
       <!-- Background -->
       <rect width="1400" height="760" fill="#f2f2f0"/>
 
@@ -601,7 +604,8 @@
       <text x="510" y="440" font-size="8" fill="#888" font-family="sans-serif">Middle School</text>
 
       <!-- Blue travel path (extended across full width) -->
-      <g stroke="#3b9ee8" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="#3b9ee8" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Existing travel path route">
+        <title>Existing Travel Path</title>
         <polyline points="150,124 150,260 300,260 300,124 480,124 480,260 660,260 660,124 840,124 840,260 1020,260 1020,124 1200,124 1200,260"/>
         <polyline points="150,264 150,400 300,400 300,264 480,264 480,400 660,400"/>
         <polyline points="150,404 150,540 300,540 300,404 480,404 480,540 660,540 840,540"/>
@@ -615,6 +619,38 @@
         <polyline points="150,264 150,400 300,400 300,264 480,264 480,400 660,400"/>
         <polyline points="150,404 150,540 300,540 300,404 480,404 480,540 660,540 840,540"/>
         <polyline points="660,264 660,400 840,400 840,264 1020,264 1020,400"/>
+      </g>
+
+      <!-- ── EDITED PATH OVERLAY ── hidden by default, shown in edit mode -->
+      <!-- ADA: color (amber) + pattern (thick dashes + animated march) + ARIA label -->
+      <g id="edited-path-overlay" role="img"
+         aria-label="Edited travel path segments — shown with amber dashed pattern while editing. Will disappear on save."
+         aria-hidden="true"
+         style="display:none;">
+        <title>Edited Path Segments</title>
+        <desc>These amber dashed segments represent travel path edits that have not yet been saved. The pattern uses both color and a distinct dashed stroke to ensure visibility for users with color vision deficiencies.</desc>
+        <!-- Amber base stroke -->
+        <g stroke="#f59e0b" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9">
+          <polyline points="300,264 300,400 480,400 480,264"/>
+          <polyline points="480,264 480,124 660,124 660,260"/>
+        </g>
+        <!-- Animated marching dashes over the amber (pattern indicator — not color alone) -->
+        <g stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"
+           stroke-dasharray="12,14" opacity=".85">
+          <polyline points="300,264 300,400 480,400 480,264">
+            <animate attributeName="stroke-dashoffset" from="0" to="-26" dur=".6s" repeatCount="indefinite"/>
+          </polyline>
+          <polyline points="480,264 480,124 660,124 660,260">
+            <animate attributeName="stroke-dashoffset" from="0" to="-26" dur=".6s" repeatCount="indefinite"/>
+          </polyline>
+        </g>
+        <!-- Dot markers at edit start/end points for additional ADA signal -->
+        <g fill="#f59e0b" stroke="#fff" stroke-width="2">
+          <circle cx="300" cy="264" r="7"/>
+          <circle cx="480" cy="400" r="7"/>
+          <circle cx="480" cy="264" r="7"/>
+          <circle cx="660" cy="260" r="7"/>
+        </g>
       </g>
       <!-- Direction arrows -->
       <g fill="#2a8cd4">
@@ -742,7 +778,47 @@
   </div>
 
   <!-- Legend -->
-  <div class="float-legend">Legend ▾</div>
+  <div class="float-legend" id="float-legend" role="region" aria-label="Map legend">Legend ▾</div>
+
+  <!-- Expanded legend panel — shown in edit mode -->
+  <div id="legend-panel" style="
+    display:none; position:absolute; bottom:46px; right:12px; z-index:20;
+    background:rgba(255,255,255,.97); backdrop-filter:blur(8px);
+    border:1px solid rgba(0,0,0,.1); border-radius:8px; padding:12px 14px;
+    font-size:11px; min-width:180px; box-shadow:0 2px 8px rgba(0,0,0,.1);
+  " role="img" aria-label="Travel path legend">
+    <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:8px;">Legend</div>
+
+    <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:5px;letter-spacing:.4px;">PATH TYPE</div>
+
+    <!-- Existing path -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;" role="listitem">
+      <svg width="28" height="8" aria-hidden="true">
+        <line x1="0" y1="4" x2="28" y2="4" stroke="#3b9ee8" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <span style="color:#374151;">Existing path</span>
+    </div>
+
+    <!-- Edited path — color + pattern swatch -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;" role="listitem">
+      <svg width="28" height="8" aria-hidden="true">
+        <line x1="0" y1="4" x2="28" y2="4" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+        <line x1="0" y1="4" x2="28" y2="4" stroke="#fff" stroke-width="2" stroke-dasharray="5,6" stroke-linecap="round"/>
+      </svg>
+      <span style="color:#374151;font-weight:600;">Edited path <span style="font-size:9px;color:#d97706;">(unsaved)</span></span>
+    </div>
+
+    <div style="height:1px;background:#f1f5f9;margin:8px 0;"></div>
+    <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:5px;letter-spacing:.4px;">STOPS</div>
+    <div style="display:flex;align-items:center;gap:8px;" role="listitem">
+      <svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="#00bcd4"/></svg>
+      <span style="color:#374151;">Service stop</span>
+    </div>
+
+    <div style="margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9;font-size:10px;color:#94a3b8;line-height:1.4;">
+      Edited segments use amber color<br>+ animated dash pattern
+    </div>
+  </div>
 
   <!-- Bottom pill bar -->
   <div class="float-bottom" style="flex-direction:column; gap:6px;">
@@ -760,7 +836,9 @@
         </svg>
         Version History
       </button>
-      <button class="save-btn" onclick="openSave()">
+      <button class="save-btn" id="save-changes-btn" onclick="openSave()" disabled
+        title="Edit the travel path first, then validate with the checkmark to enable Save Changes"
+        style="opacity:.4; cursor:not-allowed;">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
           <path d="M2 2h9l3 3v9H2V2zm5 10a2 2 0 100-4 2 2 0 000 4zm1-8H5v3h3V4z"/>
         </svg>
@@ -768,7 +846,7 @@
       </button>
     </div>
     <div class="bar-note">
-      ⬆ New bottom bar — always visible in Travel Path Editor &nbsp;|&nbsp; Version name is editable (click to rename) &nbsp;|&nbsp; Save is now exclusively here — floppy disk icon removed from side panel
+      ⬆ New bottom bar — Save Changes is <strong>disabled until you validate edits</strong> (click ✏ Simulate Edit Mode, then ✓ to validate) &nbsp;|&nbsp; Version name is editable (click to rename)
     </div>
   </div>
 
@@ -961,11 +1039,17 @@ function setScenario(s) {
 }
 
 let editMode = false;
+let validated = false;
+
 function toggleEditMode() {
   editMode = !editMode;
+  validated = false; // reset validation on every edit mode toggle
   const btn = document.getElementById('edit-toggle-btn');
   const checkmark = document.getElementById('ctrl-checkmark');
   const banner = document.getElementById('editing-banner');
+  const editedPath = document.getElementById('edited-path-overlay');
+  const legendPanel = document.getElementById('legend-panel');
+  const saveBtn = document.getElementById('save-changes-btn');
 
   if (editMode) {
     btn.textContent = '⏹ Exit Edit Mode';
@@ -973,7 +1057,17 @@ function toggleEditMode() {
     btn.style.color = '#1a1f2e';
     btn.style.fontWeight = '700';
     checkmark.style.display = 'flex';
+    // Make checkmark clickable to validate
+    checkmark.onclick = validateEdits;
+    checkmark.title = 'Validate edits — click to enable Save Changes';
     banner.style.display = 'block';
+    editedPath.style.display = 'block';
+    editedPath.setAttribute('aria-hidden', 'false');
+    legendPanel.style.display = 'block';
+    // Save stays disabled until validated
+    saveBtn.disabled = true;
+    saveBtn.style.opacity = '.4';
+    saveBtn.style.cursor = 'not-allowed';
   } else {
     btn.textContent = '✏ Simulate Edit Mode';
     btn.style.background = 'transparent';
@@ -981,7 +1075,44 @@ function toggleEditMode() {
     btn.style.fontWeight = '600';
     checkmark.style.display = 'none';
     banner.style.display = 'none';
+    editedPath.style.display = 'none';
+    editedPath.setAttribute('aria-hidden', 'true');
+    legendPanel.style.display = 'none';
+    // Disable save again on exit
+    saveBtn.disabled = true;
+    saveBtn.style.opacity = '.4';
+    saveBtn.style.cursor = 'not-allowed';
   }
+}
+
+function validateEdits() {
+  // User clicked checkmark — edits validated, enable Save Changes
+  validated = true;
+  const saveBtn = document.getElementById('save-changes-btn');
+  const checkmark = document.getElementById('ctrl-checkmark');
+  const editedPath = document.getElementById('edited-path-overlay');
+  const legendPanel = document.getElementById('legend-panel');
+  saveBtn.disabled = false;
+  saveBtn.style.opacity = '1';
+  saveBtn.style.cursor = 'pointer';
+  // Checkmark disappears after validation (edit confirmed, back to review state)
+  checkmark.style.display = 'none';
+  // Edited path overlay stays until save
+  showToast('Edits validated — Save Changes is now enabled');
+}
+
+// When Save Changes is confirmed — edited path overlay disappears, button resets
+function onSaveConfirmed() {
+  editMode = false;
+  validated = false;
+  const editedPath = document.getElementById('edited-path-overlay');
+  const legendPanel = document.getElementById('legend-panel');
+  const saveBtn = document.getElementById('save-changes-btn');
+  if (editedPath) { editedPath.style.display = 'none'; editedPath.setAttribute('aria-hidden', 'true'); }
+  if (legendPanel) legendPanel.style.display = 'none';
+  saveBtn.disabled = true;
+  saveBtn.style.opacity = '.4';
+  saveBtn.style.cursor = 'not-allowed';
 }
 
 // Close modals on backdrop click
