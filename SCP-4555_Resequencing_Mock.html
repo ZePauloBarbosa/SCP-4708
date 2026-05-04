@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCP-4555 — Route Resequencing Mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #20315a;
+    --header-bg: #242833;
+    --green: #33a542;
+    --page-bg: #fafafc;
+    --divider: #f2f2f5;
+    --border: #d9d9e1;
+    --label: #b4b4c4;
+    --overlay: rgba(36,40,51,0.30);
+    --nav-text: #d3d4d6;
+    --card-shadow: 0px 0px 10px 0px rgba(0,0,0,0.15);
+    --close-bg: #ebebf0;
+    --amber: #f59e0b;
+    --blue: #2563eb;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Montserrat',sans-serif; background:var(--page-bg); min-height:100vh; font-size:14px; color:#000; }
+
+  /* HEADER */
+  .scp-header { background:var(--header-bg); height:70px; display:flex; align-items:center; padding:0 40px; position:sticky; top:0; z-index:100; }
+  .scp-logo { display:flex; align-items:center; gap:10px; margin-right:60px; }
+  .scp-logo-mark { width:32px; height:32px; background:var(--green); border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .scp-logo-text { font-size:15px; font-weight:600; color:#fff; letter-spacing:1px; }
+  .scp-nav { display:flex; gap:48px; height:100%; }
+  .scp-nav-item { display:flex; flex-direction:column; justify-content:center; padding-top:8px; cursor:pointer; }
+  .scp-nav-inner { display:flex; align-items:center; height:50px; }
+  .scp-nav-label { font-weight:400; font-size:15px; color:var(--nav-text); white-space:nowrap; }
+  .scp-nav-bar { height:4px; width:100%; }
+  .scp-nav-item.active .scp-nav-bar { background:var(--green); }
+  .scp-nav-item.active .scp-nav-label { color:#fff; }
+  .scp-header-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .scp-tag { background:var(--nav-text); border:0.5px solid var(--header-bg); border-radius:5px; padding:3px 8px; font-weight:300; font-size:12px; color:#000; }
+
+  /* PROTOTYPE CONTROLS */
+  .proto-context { background:#fff7ed; border-bottom:2px solid #f59e0b; padding:14px 40px; display:flex; align-items:flex-start; gap:16px; }
+  .proto-context-badge { background:#f59e0b; color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:3px; white-space:nowrap; margin-top:2px; letter-spacing:.5px; flex-shrink:0; }
+  .proto-context-ticket { font-size:12px; font-weight:700; color:#92400e; }
+  .proto-context-title { font-size:14px; font-weight:600; color:#1c1917; margin-top:1px; }
+  .proto-context-desc { font-size:12px; color:#78716c; margin-top:3px; line-height:1.5; }
+  .proto-controls-wrap { background:#fef3c7; border-bottom:1px dashed #fbbf24; padding:10px 40px; display:flex; align-items:center; gap:10px; }
+  .proto-controls-label { font-size:10px; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:.6px; white-space:nowrap; display:flex; align-items:center; gap:5px; }
+  .proto-controls-label::before { content:''; display:inline-block; width:8px; height:8px; background:#f59e0b; border-radius:50%; }
+  .proto-sep { width:1px; height:18px; background:#fbbf24; margin:0 2px; }
+
+  /* PAGE */
+  .page { max-width:1140px; margin:0 auto; padding:0 40px 40px; }
+  .page-header { display:flex; align-items:center; justify-content:space-between; padding:30px 0 20px; }
+  .page-title-row { display:flex; align-items:center; gap:12px; }
+  .back-arrow { color:var(--label); font-size:18px; cursor:pointer; }
+  .page-title { font-weight:300; font-size:36px; color:#000; }
+  .header-actions { display:flex; gap:8px; }
+
+  /* BUTTONS */
+  .btn-primary { background:var(--navy); color:#fff; border:none; border-radius:5px; padding:8px 30px; font-family:'Montserrat',sans-serif; font-weight:400; font-size:14px; cursor:pointer; transition:opacity .15s; white-space:nowrap; }
+  .btn-primary:hover { opacity:.88; }
+  .btn-secondary { background:#fff; color:var(--navy); border:1px solid var(--navy); border-radius:5px; padding:8px 30px; font-family:'Montserrat',sans-serif; font-weight:400; font-size:14px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+  .btn-secondary:hover { background:var(--navy); color:#fff; }
+
+  /* BANNER */
+  .reseq-banner { border-radius:5px; display:flex; align-items:center; gap:12px; margin-bottom:16px; overflow:hidden; max-height:0; opacity:0; transition:max-height .4s ease,opacity .3s ease,padding .4s ease; border:1px solid transparent; padding:0 16px; }
+  .reseq-banner.show { max-height:80px; opacity:1; padding:14px 16px; }
+  .reseq-banner.processing { background:#fffbeb; border-color:#fcd34d; }
+  .reseq-banner.done { background:#f0fdf4; border-color:#86efac; }
+  .banner-spinner { width:16px; height:16px; border:2px solid rgba(180,130,0,.25); border-top-color:#d97706; border-radius:50%; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .banner-icon { font-size:16px; flex-shrink:0; display:none; }
+  .banner-body { flex:1; }
+  .banner-title { font-size:13px; font-weight:600; color:#000; margin-bottom:2px; }
+  .banner-sub { font-size:12px; color:var(--label); }
+  .banner-dismiss { background:none; border:none; color:var(--label); cursor:pointer; font-size:18px; display:none; }
+  .banner-dismiss:hover { color:#000; }
+
+  /* META CARD */
+  .meta-card { background:#fff; box-shadow:var(--card-shadow); padding:15px 24px; display:flex; align-items:center; gap:28px; margin-bottom:16px; }
+  .meta-item { display:flex; flex-direction:column; gap:4px; }
+  .meta-label { font-size:12px; color:var(--label); font-weight:400; }
+  .meta-value { font-size:14px; font-weight:400; color:#000; }
+  .meta-divider { width:1px; height:32px; background:var(--divider); }
+  .meta-action { margin-left:auto; }
+  .meta-action span { color:var(--navy); font-size:13px; cursor:pointer; }
+
+  /* MAP LAYOUT */
+  .main-layout { background:#fff; box-shadow:var(--card-shadow); margin-bottom:16px; display:grid; grid-template-columns:260px 1fr; min-height:280px; }
+  .sidebar { border-right:1px solid var(--divider); display:flex; flex-direction:column; }
+  .sidebar-head { padding:12px 16px; border-bottom:1px solid var(--divider); display:flex; align-items:center; justify-content:space-between; }
+  .sidebar-title { font-size:13px; font-weight:600; }
+  .sidebar-row { display:flex; align-items:center; gap:8px; padding:12px 16px 4px; }
+  .sidebar-row input { accent-color:var(--navy); width:14px; height:14px; }
+  .sidebar-row label { font-size:13px; font-weight:400; }
+  .sidebar-row .edit-icon { margin-left:auto; color:var(--label); cursor:pointer; font-size:13px; }
+  .sidebar-err { font-size:11px; color:#ef4444; padding:0 16px 10px 38px; cursor:pointer; }
+  .sidebar-foot { margin-top:auto; padding:14px 16px; }
+  .map-area { position:relative; overflow:hidden; }
+  .map-svg { width:100%; height:280px; display:block; }
+  .map-legend { position:absolute; bottom:10px; right:10px; background:rgba(255,255,255,.97); border-radius:5px; padding:8px 12px; font-size:11px; border:1px solid rgba(0,0,0,.08); }
+  .map-legend-title { font-size:12px; font-weight:600; margin-bottom:6px; }
+  .legend-row { display:flex; align-items:center; gap:6px; margin-bottom:4px; color:#374151; }
+  .legend-line { width:22px; height:3px; border-radius:2px; }
+
+  /* STOP TABLE */
+  .stop-table { background:#fff; box-shadow:var(--card-shadow); }
+  .stop-thead { display:grid; grid-template-columns:72px 1fr 140px 180px 130px; padding:8px 20px; background:var(--page-bg); border-bottom:1px solid var(--divider); }
+  .stop-th { font-size:11px; font-weight:600; color:var(--label); text-transform:uppercase; letter-spacing:.4px; }
+  .stop-row { display:grid; grid-template-columns:72px 1fr 140px 180px 130px; padding:11px 20px; border-bottom:1px solid var(--divider); align-items:center; transition:background .1s; }
+  .stop-row:hover { background:var(--page-bg); }
+  .stop-row.hi { background:#f0fdf4; border-left:3px solid var(--green); }
+  .stop-num { font-size:13px; font-weight:600; color:#374151; }
+  .stop-name { font-size:13px; font-weight:600; }
+  .stop-addr { font-size:11px; color:var(--label); margin-top:1px; }
+  .days { display:flex; gap:3px; }
+  .day { width:20px; height:20px; border-radius:50%; background:var(--divider); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:600; color:var(--label); }
+  .day.on { background:var(--navy); color:#fff; }
+
+  /* EDITOR OVERLAY */
+  .editor-overlay { position:fixed; inset:0; background:var(--overlay); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding:30px 24px; opacity:0; pointer-events:none; transition:opacity .2s; }
+  .editor-overlay.open { opacity:1; pointer-events:all; }
+  .editor-modal { background:#fff; width:100%; max-width:1100px; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.2); transform:translateY(12px); transition:transform .25s; max-height:calc(100vh - 60px); overflow:hidden; }
+  .editor-overlay.open .editor-modal { transform:translateY(0); }
+
+  .editor-header { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid var(--divider); flex-shrink:0; }
+  .editor-title { font-size:14px; font-weight:600; }
+  .editor-route { font-size:14px; font-weight:400; color:var(--label); margin-left:10px; }
+  .editor-close-btn { width:24px; height:24px; background:var(--close-bg); border:none; border-radius:4px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; color:#555; }
+  .editor-close-btn:hover { background:var(--border); }
+
+  .editor-map-area { position:relative; flex-shrink:0; height:400px; }
+  .editor-map-svg { width:100%; height:100%; display:block; }
+
+  .editor-instr { position:absolute; top:12px; left:12px; background:rgba(255,255,255,.97); border-radius:5px; padding:10px 14px; font-size:12px; border:1px solid rgba(0,0,0,.07); z-index:5; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .editor-instr ol { padding-left:16px; }
+  .editor-instr li { line-height:2; color:#444; }
+  .editor-instr li.active { color:var(--green); font-weight:600; cursor:pointer; }
+  .editor-instr li.active:hover { text-decoration:underline; }
+
+  .editor-ctrls { position:absolute; top:12px; right:12px; display:flex; flex-direction:column; gap:6px; z-index:5; }
+  .ctrl-btn { width:32px; height:32px; background:rgba(255,255,255,.97); border:1px solid rgba(0,0,0,.1); border-radius:5px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; color:#555; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+
+  /* EDITOR BAR */
+  .editor-bar { display:flex; align-items:center; gap:14px; padding:10px 20px; border-top:1px solid var(--divider); background:#fff; flex-shrink:0; }
+  .bar-label { font-size:13px; font-weight:600; }
+  .bar-divider { width:1px; height:16px; background:var(--divider); }
+  .bar-route { font-size:13px; color:var(--label); }
+  .bar-version { font-size:13px; color:var(--label); cursor:pointer; border-bottom:1px dashed var(--border); }
+  .bar-hist-btn { display:flex; align-items:center; gap:6px; border:1px solid var(--divider); border-radius:5px; padding:6px 16px; font-family:'Montserrat',sans-serif; font-size:12px; font-weight:600; color:#000; background:none; cursor:pointer; }
+  .bar-hist-btn:hover { background:var(--page-bg); }
+  .bar-save-btn { margin-left:auto; background:var(--navy); border:none; border-radius:5px; padding:8px 30px; font-family:'Montserrat',sans-serif; font-size:13px; font-weight:400; color:#fff; cursor:pointer; }
+  .bar-save-btn:hover { opacity:.88; }
+
+  /* SAVE MODAL */
+  .save-modal-overlay { position:absolute; inset:0; background:var(--overlay); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:20; opacity:0; pointer-events:none; transition:opacity .2s; }
+  .save-modal-overlay.open { opacity:1; pointer-events:all; }
+  .save-modal { background:#fff; width:420px; padding:30px; box-shadow:0 20px 60px rgba(0,0,0,.2); transform:scale(.97) translateY(6px); transition:transform .2s cubic-bezier(.34,1.4,.64,1); }
+  .save-modal-overlay.open .save-modal { transform:scale(1) translateY(0); }
+  .save-modal-title { font-weight:300; font-size:27px; color:#000; margin-bottom:14px; }
+  .save-modal-body { font-size:14px; font-weight:400; color:#000; line-height:1.6; margin-bottom:14px; }
+  .save-modal-body strong { font-weight:600; }
+  .save-modal-body p+p { margin-top:10px; }
+  .save-modal-divider { height:1px; background:var(--divider); margin:18px 0; }
+  .save-modal-actions { display:flex; flex-direction:column; gap:10px; }
+  .smc-cancel { width:100%; padding:10px 30px; background:#fff; border:1px solid var(--navy); border-radius:5px; font-family:'Montserrat',sans-serif; font-size:14px; font-weight:400; color:var(--navy); cursor:pointer; transition:all .15s; }
+  .smc-cancel:hover { background:var(--navy); color:#fff; }
+  .smc-save-path { width:100%; padding:10px 30px; background:var(--navy); border:none; border-radius:5px; font-family:'Montserrat',sans-serif; font-size:14px; font-weight:400; color:#fff; cursor:pointer; }
+  .smc-save-path:hover { opacity:.88; }
+  .smc-save-reseq { width:100%; padding:10px 30px; background:#2563eb; border:none; border-radius:5px; font-family:'Montserrat',sans-serif; font-size:14px; font-weight:400; color:#fff; cursor:pointer; }
+  .smc-save-reseq:hover { opacity:.88; }
+</style>
+</head>
+<body>
+
+<header class="scp-header">
+  <div class="scp-logo">
+    <div class="scp-logo-mark">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+    </div>
+    <span class="scp-logo-text">ROUTEWARE</span>
+  </div>
+  <nav class="scp-nav">
+    <div class="scp-nav-item active"><div class="scp-nav-inner"><span class="scp-nav-label">DISPATCH</span></div><div class="scp-nav-bar"></div></div>
+    <div class="scp-nav-item"><div class="scp-nav-inner"><span class="scp-nav-label">CUSTOMERS</span></div><div class="scp-nav-bar"></div></div>
+    <div class="scp-nav-item"><div class="scp-nav-inner"><span class="scp-nav-label">FLEET</span></div><div class="scp-nav-bar"></div></div>
+    <div class="scp-nav-item"><div class="scp-nav-inner"><span class="scp-nav-label">INSIGHTS</span></div><div class="scp-nav-bar"></div></div>
+  </nav>
+  <div class="scp-header-right">
+    <div class="scp-tag">City of Roseville</div>
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--nav-text)" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+  </div>
+</header>
+
+<!-- PROTOTYPE CONTEXT — not part of the SmartCity UI -->
+<div class="proto-context">
+  <div class="proto-context-badge">MOCK</div>
+  <div>
+    <div class="proto-context-ticket">SCP-4555 &nbsp;·&nbsp; Route Resequencing Based on Travel Path Edit</div>
+    <div class="proto-context-title">Save Travel Path Modal &amp; Async Resequencing UX</div>
+    <div class="proto-context-desc">This mock represents the Route Detail page for route FRI_01. It demonstrates: (1) the Travel Path Editor modal with a bottom-bar Save Changes button, (2) the Save Travel Path modal with two options — Save Travel Path (closes editor only) and Save &amp; Resequence (closes editor and fires background resequencing), and (3) the persistent amber in-page banner that runs while resequencing is in progress, transitioning to green on completion.</div>
+  </div>
+</div>
+<div class="proto-controls-wrap">
+  <span class="proto-controls-label">Prototype Steps</span>
+  <div class="proto-sep"></div>
+  <span style="font-size:11px;color:#92400e;font-weight:600;" id="l1">① Travel path edited</span>
+  <span style="font-size:11px;color:#a16207;">›</span>
+  <span style="font-size:11px;color:#92400e;font-weight:600;" id="l2">② Open editor → Save Changes</span>
+  <span style="font-size:11px;color:#a16207;">›</span>
+  <span style="font-size:11px;color:#a16207;" id="l3">③ Choose save option</span>
+  <span style="font-size:11px;color:#a16207;">›</span>
+  <span style="font-size:11px;color:#a16207;" id="l4">④ Editor closes → banner</span>
+</div>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-title-row">
+      <span class="back-arrow">←</span>
+      <h1 class="page-title">FRI_01</h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary">Edit</button>
+      <button class="btn-secondary">Export</button>
+      <button class="btn-primary" onclick="openEditor()">Open Travel Path Editor</button>
+    </div>
+  </div>
+
+  <div class="reseq-banner processing" id="reseq-banner">
+    <div class="banner-spinner" id="banner-spinner"></div>
+    <div class="banner-icon" id="banner-icon">✅</div>
+    <div class="banner-body">
+      <div class="banner-title" id="banner-title">Resequencing in progress...</div>
+      <div class="banner-sub" id="banner-sub">Stop order is being updated to match the new travel path. This may take up to 10 minutes — you can keep using SmartCity while this runs.</div>
+    </div>
+    <button class="banner-dismiss" id="banner-dismiss" onclick="dismissBanner()">×</button>
+  </div>
+
+  <div class="meta-card">
+    <div class="meta-item"><div class="meta-label">Vehicle</div><div class="meta-value">Residential</div></div>
+    <div class="meta-divider"></div>
+    <div class="meta-item"><div class="meta-label"># of Stops</div><div class="meta-value">777</div></div>
+    <div class="meta-divider"></div>
+    <div class="meta-item"><div class="meta-label">Start Date</div><div class="meta-value">03/30/2023</div></div>
+    <div class="meta-divider"></div>
+    <div class="meta-item"><div class="meta-label">Route Date</div><div class="meta-value">Friday</div></div>
+    <div class="meta-divider"></div>
+    <div class="meta-item"><div class="meta-label">Groups</div><div class="meta-value">—</div></div>
+    <div class="meta-action"><span>Edit Pickup Locations</span></div>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="sidebar-head"><span class="sidebar-title">Map Filters</span><span style="color:var(--label);cursor:pointer;">×</span></div>
+      <div class="sidebar-row">
+        <input type="checkbox" id="tp" checked>
+        <label for="tp">Travel Path</label>
+        <span class="edit-icon">✏</span>
+      </div>
+      <div class="sidebar-err">⟳ Failed. Click to Retry</div>
+      <div class="sidebar-foot"><button class="btn-primary" style="width:100%;padding:10px 30px;">Apply</button></div>
+    </div>
+    <div class="map-area">
+      <svg class="map-svg" viewBox="0 0 780 280" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+        <rect width="780" height="280" fill="#e8eaed"/>
+        <g stroke="#d0d0cc" stroke-width="10" fill="none">
+          <line x1="0" y1="70" x2="780" y2="70"/><line x1="0" y1="155" x2="780" y2="155"/><line x1="0" y1="240" x2="780" y2="240"/>
+          <line x1="90" y1="0" x2="90" y2="280"/><line x1="240" y1="0" x2="240" y2="280"/><line x1="390" y1="0" x2="390" y2="280"/><line x1="540" y1="0" x2="540" y2="280"/><line x1="660" y1="0" x2="660" y2="280"/>
+        </g>
+        <g fill="#e0e0da" stroke="#d2d2cc" stroke-width=".5">
+          <rect x="94" y="74" width="142" height="77"/><rect x="244" y="74" width="142" height="77"/><rect x="394" y="74" width="142" height="77"/><rect x="544" y="74" width="112" height="77"/>
+          <rect x="94" y="159" width="142" height="77"/><rect x="244" y="159" width="142" height="77"/><rect x="394" y="159" width="142" height="77"/>
+        </g>
+        <g stroke="#3b9ee8" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="110,70 110,155 240,155 240,70 390,70 390,155 540,155 540,70 660,70 660,155"/>
+          <polyline points="110,159 110,240 240,240 240,159 390,159 390,240"/>
+          <polyline points="540,159 540,240 660,240 660,159"/>
+        </g>
+        <g stroke="#fff" stroke-width="1.5" fill="none" stroke-dasharray="8,10" opacity=".4">
+          <polyline points="110,70 110,155 240,155 240,70 390,70 390,155 540,155 540,70 660,70 660,155"/>
+        </g>
+        <g fill="#2a8cd4">
+          <polygon points="175,152 168,145 182,145"/><polygon points="315,152 308,145 322,145"/>
+          <polygon points="465,152 458,145 472,145"/><polygon points="600,152 593,145 607,145"/>
+        </g>
+        <rect x="94" y="65" width="570" height="184" fill="none" stroke="#111" stroke-width="1.5" stroke-dasharray="5,3" rx="2"/>
+        <g font-size="8" fill="#aaa" font-family="sans-serif"><text x="250" y="62">Junction Blvd</text><text x="100" y="152">Baseline Rd</text></g>
+      </svg>
+      <div class="map-legend">
+        <div class="map-legend-title">Legend</div>
+        <div class="legend-row"><div class="legend-line" style="background:#3b9ee8;"></div>Service Path</div>
+        <div class="legend-row"><div class="legend-line" style="background:transparent;border-top:2px dashed #374151;width:22px;"></div>Dead Head</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stop-table">
+    <div class="stop-thead">
+      <div class="stop-th">Stop #</div><div class="stop-th">Customer</div><div class="stop-th">Account Status</div><div class="stop-th">Service</div><div class="stop-th">Day of Service</div>
+    </div>
+    <div id="stop-rows"></div>
+  </div>
+</div>
+
+<!-- EDITOR OVERLAY -->
+<div class="editor-overlay" id="editor-overlay">
+  <div class="editor-modal">
+    <div class="editor-header">
+      <div style="display:flex;align-items:center;">
+        <span class="editor-title">Travel Path Editor</span>
+        <span class="editor-route">FRI_01</span>
+      </div>
+      <button class="editor-close-btn" onclick="closeEditor()">×</button>
+    </div>
+    <div class="editor-map-area">
+      <svg class="editor-map-svg" viewBox="0 0 1060 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+        <rect width="1060" height="400" fill="#f0f0ee"/>
+        <g stroke="#d8d8d4" stroke-width="12" fill="none">
+          <line x1="0" y1="100" x2="1060" y2="100"/><line x1="0" y1="210" x2="1060" y2="210"/><line x1="0" y1="320" x2="1060" y2="320"/>
+          <line x1="120" y1="0" x2="120" y2="400"/><line x1="300" y1="0" x2="300" y2="400"/><line x1="480" y1="0" x2="480" y2="400"/><line x1="660" y1="0" x2="660" y2="400"/><line x1="840" y1="0" x2="840" y2="400"/><line x1="980" y1="0" x2="980" y2="400"/>
+        </g>
+        <g fill="#ebebE6" stroke="#d8d8d3" stroke-width=".5">
+          <rect x="124" y="104" width="172" height="102"/><rect x="304" y="104" width="172" height="102"/><rect x="484" y="104" width="172" height="102"/>
+          <rect x="664" y="104" width="172" height="102"/><rect x="844" y="104" width="132" height="102"/>
+          <rect x="124" y="214" width="172" height="102"/><rect x="304" y="214" width="172" height="102"/>
+          <rect x="484" y="214" width="172" height="102"/><rect x="664" y="214" width="172" height="102"/>
+        </g>
+        <g stroke="#3b9ee8" stroke-width="4" fill="none" stroke-linecap="round">
+          <polyline points="148,100 148,210 300,210 300,100 480,100 480,210 660,210 660,100 840,100 840,210"/>
+          <polyline points="148,214 148,320 300,320 300,214 480,214 480,320"/>
+          <polyline points="660,214 660,320 840,320 840,214"/>
+        </g>
+        <g stroke="#fff" stroke-width="1.5" fill="none" stroke-dasharray="8,10" opacity=".4">
+          <polyline points="148,100 148,210 300,210 300,100 480,100 480,210 660,210 660,100 840,100 840,210"/>
+        </g>
+        <g fill="#2a8cd4">
+          <polygon points="214,207 207,200 221,200"/><polygon points="374,207 367,200 381,200"/>
+          <polygon points="554,207 547,200 561,200"/><polygon points="734,207 727,200 741,200"/>
+        </g>
+        <rect x="132" y="96" width="726" height="330" fill="none" stroke="#111" stroke-width="1.5" stroke-dasharray="5,3" rx="2"/>
+        <g font-size="9" fill="#aaa" font-family="sans-serif"><text x="310" y="93">Junction Blvd</text><text x="310" y="205">Baseline Rd</text></g>
+        <rect x="148" y="355" width="36" height="24" fill="#4fc3f7" stroke="#2196f3" stroke-width="1.5" rx="2"/>
+      </svg>
+
+      <div class="editor-instr">
+        <ol>
+          <li>Select Starting Segment</li>
+          <li>Select Ending Segment</li>
+          <li>Draw Desired Path</li>
+          <li class="active" onclick="openSaveModal()">Review and Save ›</li>
+        </ol>
+      </div>
+      <div class="editor-ctrls">
+        <div class="ctrl-btn">×</div>
+        <div class="ctrl-btn" style="font-size:11px;">↩</div>
+      </div>
+      <div style="position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,.96);border-radius:5px;padding:4px 12px;font-size:12px;cursor:pointer;border:1px solid rgba(0,0,0,.07);">Legend ▾</div>
+
+      <!-- SAVE MODAL -->
+      <div class="save-modal-overlay" id="save-modal-overlay">
+        <div class="save-modal">
+          <div class="save-modal-title">Save Travel Path</div>
+          <div class="save-modal-body">
+            <p>Saving will create a new version (<strong>Version 4</strong>) of this travel path.</p>
+            <p>Your edits will be stored as a <strong>User</strong> version and will become the active path.</p>
+          </div>
+          <div class="save-modal-divider"></div>
+          <div class="save-modal-actions">
+            <button class="smc-cancel" onclick="closeSaveModal()">Cancel</button>
+            <button class="smc-save-path" onclick="confirmSave(false)">Save Travel Path</button>
+            <button class="smc-save-reseq" onclick="confirmSave(true)">Save &amp; Resequence</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-bar">
+      <span class="bar-label">Travel Path Editor</span>
+      <div class="bar-divider"></div>
+      <span class="bar-route">FRI_01</span>
+      <div class="bar-divider"></div>
+      <span class="bar-version">Version 3</span>
+      <div class="bar-divider"></div>
+      <button class="bar-hist-btn">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 10.5,10"/></svg>
+        Version History
+      </button>
+      <button class="bar-save-btn" onclick="openSaveModal()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const stops=[{n:1,name:'1757 BRAITHWAITE St',addr:'1757 BRAITHWAITE St (3564.1)',days:[0,0,0,0,1,0]},{n:2,name:'1756 BRAITHWAITE St',addr:'1756 BRAITHWAITE St (11558.1)',days:[0,0,0,0,1,0]},{n:3,name:'1749 BRAITHWAITE St',addr:'1749 BRAITHWAITE St (12064.1)',days:[0,0,0,0,1,0]},{n:4,name:'1748 BRAITHWAITE St',addr:'1748 BRAITHWAITE St (12067.1)',days:[0,0,0,0,1,0]},{n:5,name:'1741 BRAITHWAITE St',addr:'1741 BRAITHWAITE St (12065.1)',days:[1,0,0,0,1,0]},{n:6,name:'1740 BRAITHWAITE St',addr:'1740 BRAITHWAITE St (3567.1)',days:[0,0,0,0,1,0]},{n:7,name:'1733 BRAITHWAITE St',addr:'1733 BRAITHWAITE St (2771.1)',days:[0,0,0,0,1,0]},{n:8,name:'1732 BRAITHWAITE St',addr:'1732 BRAITHWAITE St (2896.1)',days:[0,0,0,1,1,0]}];
+const D=['M','T','W','T','F','S'];
+function renderStops(hi){const order=hi?[...stops].sort(()=>Math.random()-.3):stops;document.getElementById('stop-rows').innerHTML=order.map((s,i)=>`<div class="stop-row ${hi?'hi':''}"><div class="stop-num">${i+1}</div><div><div class="stop-name">${s.name}</div><div class="stop-addr">${s.addr}</div></div><div style="font-size:13px;">Active</div><div style="font-size:13px;">92GL - TOT - Trash</div><div class="days">${D.map((d,j)=>`<div class="day ${s.days[j]?'on':''}">${d}</div>`).join('')}</div></div>`).join('');}
+function setStep(n){
+  const labels=['Travel path edited','Open editor → Save Changes','Choose save option','Editor closes → banner'];
+  for(let i=1;i<=4;i++){
+    const l=document.getElementById('l'+i);
+    if(!l) continue;
+    if(i<n){ l.style.color='#15803d'; l.style.fontWeight='600'; l.textContent='✓ '+labels[i-1]; }
+    else if(i===n){ l.style.color='#92400e'; l.style.fontWeight='700'; l.textContent='→ '+labels[i-1]; }
+    else { l.style.color='#a16207'; l.style.fontWeight='400'; l.textContent='○ '+labels[i-1]; }
+  }
+}
+function finishStep(n){
+  const labels=['Travel path edited','Open editor → Save Changes','Choose save option','Editor closes → banner'];
+  const l=document.getElementById('l'+n);
+  if(l){ l.style.color='#15803d'; l.style.fontWeight='600'; l.textContent='✓ '+labels[n-1]; }
+}
+function openEditor(){document.getElementById('editor-overlay').classList.add('open');setStep(2);}
+function closeEditor(){document.getElementById('editor-overlay').classList.remove('open');closeSaveModal();}
+function openSaveModal(){document.getElementById('save-modal-overlay').classList.add('open');setStep(3);}
+function closeSaveModal(){document.getElementById('save-modal-overlay').classList.remove('open');}
+function confirmSave(r){closeSaveModal();closeEditor();setStep(4);if(r){const b=document.getElementById('reseq-banner');b.classList.add('show');setTimeout(()=>{document.getElementById('banner-spinner').style.display='none';document.getElementById('banner-icon').style.display='block';document.getElementById('banner-title').textContent='Resequencing complete';document.getElementById('banner-sub').textContent='Stop order has been updated to match the new travel path.';b.classList.remove('processing');b.classList.add('done');document.getElementById('banner-dismiss').style.display='block';renderStops(true);finishStep(4);},6000);}else{finishStep(4);}}
+function dismissBanner(){document.getElementById('reseq-banner').classList.remove('show');}
+document.getElementById('editor-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('editor-overlay'))closeEditor();});
+renderStops(false);
+</script>
+</body>
+</html>
